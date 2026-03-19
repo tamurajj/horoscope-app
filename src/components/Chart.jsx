@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { SIGNS, PLANETS, PLANET_LABELS } from '../constants/astro'
 import { SYMBOLS } from './symbols'
 
@@ -10,9 +11,6 @@ const R_PLANET = 110
 
 function toRad(deg) { return (deg * Math.PI) / 180 }
 
-/**
- * 黄経 → SVG座標（0°=左、反時計回り → 上から時計回りに変換）
- */
 function lonToXY(lon, r) {
   const angle = toRad(-(lon - 180))
   return {
@@ -22,15 +20,29 @@ function lonToXY(lon, r) {
 }
 
 const ASPECT_COLORS = {
-  conjunction: '#111',
-  opposition:  '#111',
-  trine:       '#555',
-  square:      '#888',
-  sextile:     '#aaa',
+  conjunction: '#ccc',
+  opposition:  '#ccc',
+  trine:       '#d5d5d5',
+  square:      '#e0e0e0',
+  sextile:     '#e8e8e8',
+}
+
+function lonToSignLabel(lon) {
+  const signIndex = Math.floor(lon / 30)
+  const raw = lon % 30
+  const degree = Math.floor(raw)
+  const minute = Math.floor((raw - degree) * 60)
+  const signs = ['牡羊','牡牛','双子','蟹','獅子','乙女','天秤','蠍','射手','山羊','水瓶','魚']
+  return `${signs[signIndex]} ${degree}°${String(minute).padStart(2, '0')}'`
 }
 
 export default function Chart({ planets, houses, aspects }) {
   const { cusps, asc } = houses
+  const [activeTooltip, setActiveTooltip] = useState(null)
+
+  const handlePlanetClick = (planet) => {
+    setActiveTooltip(prev => prev === planet ? null : planet)
+  }
 
   return (
     <svg
@@ -39,9 +51,9 @@ export default function Chart({ planets, houses, aspects }) {
       style={{ width: '100%', maxWidth: '480px', display: 'block', margin: '0 auto' }}
     >
       {/* 外周リング */}
-      <circle cx={CX} cy={CY} r={R_OUTER} fill="none" stroke="#ccc" strokeWidth="0.5"/>
-      <circle cx={CX} cy={CY} r={R_SIGN}  fill="none" stroke="#ccc" strokeWidth="0.5"/>
-      <circle cx={CX} cy={CY} r={R_INNER} fill="none" stroke="#ddd" strokeWidth="0.5"/>
+      <circle cx={CX} cy={CY} r={R_OUTER} fill="none" stroke="#999" strokeWidth="0.5"/>
+      <circle cx={CX} cy={CY} r={R_SIGN}  fill="none" stroke="#999" strokeWidth="0.5"/>
+      <circle cx={CX} cy={CY} r={R_INNER} fill="none" stroke="#bbb" strokeWidth="0.5"/>
 
       {/* 12サイン区切り線・ラベル */}
       {SIGNS.map((sign, i) => {
@@ -51,11 +63,11 @@ export default function Chart({ planets, houses, aspects }) {
         const mid = lonToXY(lon + 15, (R_SIGN + R_OUTER) / 2)
         return (
           <g key={sign}>
-            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#ccc" strokeWidth="0.5"/>
+            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#999" strokeWidth="0.5"/>
             <text
               x={mid.x} y={mid.y}
               textAnchor="middle" dominantBaseline="middle"
-              fontSize="7" fill="#999" fontWeight="300"
+              fontSize="7" fill="#555" fontWeight="300"
             >
               {sign.slice(0, 2)}
             </text>
@@ -78,17 +90,36 @@ export default function Chart({ planets, houses, aspects }) {
         )
       })}
 
+      {/* ハウス番号 */}
+      {cusps.map((lon, i) => {
+        const next = cusps[(i + 1) % 12]
+        const mid = next >= lon
+          ? (lon + next) / 2
+          : ((lon + next + 360) / 2) % 360
+        const { x, y } = lonToXY(mid, R_INNER - 35)
+        return (
+          <text
+            key={i}
+            x={x} y={y}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize="8" fill="#aaa" fontWeight="300"
+          >
+            {i + 1}
+          </text>
+        )
+      })}
+
       {/* アスペクト線 */}
       {aspects.map(({ planet1, planet2, type }, i) => {
-        const p1 = lonToXY(planets[planet1].longitude, R_INNER - 10)
-        const p2 = lonToXY(planets[planet2].longitude, R_INNER - 10)
+        const p1 = lonToXY(planets[planet1].longitude, R_PLANET)
+        const p2 = lonToXY(planets[planet2].longitude, R_PLANET)
         return (
           <line
             key={i}
             x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
             stroke={ASPECT_COLORS[type]}
             strokeWidth="0.5"
-            opacity="0.5"
+            opacity="1"
           />
         )
       })}
@@ -97,17 +128,48 @@ export default function Chart({ planets, houses, aspects }) {
       {PLANETS.map(planet => {
         if (!planets[planet]) return null
         const { x, y } = lonToXY(planets[planet].longitude, R_PLANET)
+        const isActive = activeTooltip === planet
         return (
-          <g key={planet} transform={`translate(${x - 6}, ${y - 6})`}>
+          <g
+            key={planet}
+            transform={`translate(${x - 8}, ${y - 8})`}
+            onClick={() => handlePlanetClick(planet)}
+            style={{ cursor: 'pointer' }}
+          >
+            <rect x="-4" y="-4" width="24" height="24" fill="transparent"/>
             <svg
-              width="12" height="12"
+              width="16" height="16"
               viewBox="0 0 24 24"
               dangerouslySetInnerHTML={{ __html: SYMBOLS[planet] }}
-              style={{ color: '#111', overflow: 'visible' }}
+              style={{ color: isActive ? '#555' : '#111', overflow: 'visible' }}
             />
           </g>
         )
       })}
+
+      {/* ツールチップ */}
+      {activeTooltip && planets[activeTooltip] && (() => {
+        const lon = planets[activeTooltip].longitude
+        const { x, y } = lonToXY(lon, R_PLANET)
+        const TW = 80, TH = 32, PAD = 6
+        const tx = Math.min(Math.max(x - TW / 2, 4), 400 - TW - 4)
+        const ty = y < CY ? y + 14 : y - TH - 14
+        return (
+          <g>
+            <rect
+              x={tx} y={ty} width={TW} height={TH}
+              rx="3" ry="3"
+              fill="white" stroke="#ccc" strokeWidth="0.5"
+            />
+            <text x={tx + PAD} y={ty + 11} fontSize="8" fill="#333" fontWeight="400">
+              {PLANET_LABELS[activeTooltip]}
+            </text>
+            <text x={tx + PAD} y={ty + 23} fontSize="9" fill="#111" fontWeight="300">
+              {lonToSignLabel(lon)}
+            </text>
+          </g>
+        )
+      })()}
 
       {/* ASCラベル */}
       {(() => {
