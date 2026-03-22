@@ -1,55 +1,110 @@
 /**
  * 天体シンボル SVGパス辞書
  * viewBox: 0 0 24 24 を想定
+ * 使用方法: dangerouslySetInnerHTML で <g> 内に埋め込む
  */
 export const SYMBOLS = {
-  sun: `<circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>`,
 
-  moon: `<path d="M17 12A7 7 0 0 1 10 5a7 7 0 1 0 7 7z" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  // 太陽 ☉ — 外円(stroke) + 中心点(fill)
+  sun: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M23.26,12.00 C23.26,18.21 18.21,23.26 12.00,23.26 C5.79,23.26 0.75,18.21 0.75,12.00 C0.75,5.79 5.79,0.75 12.00,0.75 C18.21,0.75 23.26,5.79 23.26,12.00 Z"/>
+  <path fill="currentColor" stroke="none"
+    d="M14.43,12.00 C14.43,13.34 13.34,14.43 12.00,14.43 C10.66,14.43 9.57,13.34 9.57,12.00 C9.57,10.66 10.66,9.57 12.00,9.57 C13.34,9.57 14.43,10.66 14.43,12.00 Z"/>`,
 
-  mercury: `<circle cx="12" cy="9" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="12" y1="13" x2="12" y2="19" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="9" y1="19" x2="15" y2="19" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 6.5A4 4 0 0 1 16 6.5" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  // 月 ☽
+  moon: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M7.78,0.75 C6.81,0.75 5.87,0.89 4.97,1.12
+       C9.61,2.37 12.53,6.76 12.53,12.00
+       C12.53,17.24 9.61,21.63 4.97,22.88
+       C5.87,23.11 6.81,23.25 7.78,23.25
+       C14.00,23.25 19.03,18.21 19.03,12.00
+       C19.03,5.79 14.00,0.75 7.78,0.75 Z"/>`,
 
-  venus: `<circle cx="12" cy="9" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="12" y1="13.5" x2="12" y2="20" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="9" y1="17" x2="15" y2="17" stroke="currentColor" stroke-width="1.5"/>`,
+  // 水星 ☿
+  mercury: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M17.19,9.95 C17.19,12.81 14.87,15.12 12.00,15.12
+       C9.13,15.12 6.81,12.81 6.81,9.95
+       C6.81,7.09 9.13,4.77 12.00,4.77
+       C14.87,4.77 17.19,7.09 17.19,9.95 Z
+       M16.39,0.75 C16.16,3.16 14.03,4.93 11.62,4.69
+       C9.53,4.49 7.88,2.84 7.68,0.75
+       M12.00,15.12 L12.00,23.25
+       M7.98,19.24 L16.01,19.24"/>`,
 
-  mars: `<circle cx="10" cy="13" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-         <line x1="13.5" y1="9.5" x2="19" y2="4" stroke="currentColor" stroke-width="1.5"/>
-         <polyline points="14,4 19,4 19,9" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  // 金星 ♀
+  venus: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M18.49,7.25 C18.49,10.84 15.59,13.74 12.00,13.74
+       C8.41,13.74 5.50,10.84 5.50,7.25
+       C5.50,3.66 8.41,0.75 12.00,0.75
+       C15.59,0.75 18.49,3.66 18.49,7.25 Z
+       M12.00,14.56 L12.00,23.26
+       M7.71,18.97 L16.29,18.97"/>`,
 
-  jupiter: `<path d="M13 5 C8 5 6 8 6 11 C6 14 8 15 11 15 L18 15" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="13" y1="5" x2="13" y2="20" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="8" y1="12" x2="18" y2="12" stroke="currentColor" stroke-width="1.5"/>`,
+  // 火星 ♂
+  mars: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M17.01,15.14 C17.01,19.68 13.28,23.25 8.94,23.25
+       C4.49,23.25 0.75,19.57 0.75,15.14
+       C0.75,10.61 4.49,7.00 8.94,7.00
+       C13.28,7.00 17.01,10.61 17.01,15.14 Z
+       M13.93,8.92 L21.70,0.93
+       M18.28,0.75 L21.79,0.75 L21.79,4.27"/>`,
 
-  saturn: `<path d="M11 5 L11 20" fill="none" stroke="currentColor" stroke-width="1.5"/>
-           <path d="M7 8 C7 8 9 6 11 8 C13 10 15 8 17 9" fill="none" stroke="currentColor" stroke-width="1.5"/>
-           <line x1="8" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.5"/>`,
+  // 木星 ♃
+  jupiter: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M4.79,18.87 C9.10,17.94 11.80,14.24 11.80,9.81
+       C11.80,5.39 9.10,1.69 4.79,0.75
+       M4.79,18.83 L19.22,18.83
+       M13.72,13.44 L13.72,23.25"/>`,
 
-  uranus: `<circle cx="12" cy="15" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-           <line x1="12" y1="4" x2="12" y2="11.5" stroke="currentColor" stroke-width="1.5"/>
-           <line x1="7" y1="7" x2="12" y2="4" stroke="currentColor" stroke-width="1.5"/>
-           <line x1="17" y1="7" x2="12" y2="4" stroke="currentColor" stroke-width="1.5"/>
-           <circle cx="12" cy="4" r="1" fill="currentColor"/>`,
+  // 土星 ♄
+  saturn: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M5.01,0.75 L5.01,13.38
+       M0.75,5.43 L9.84,5.43
+       M5.02,15.00 C5.02,12.05 7.23,9.99 10.35,9.99
+       C13.46,9.99 15.49,13.03 15.49,15.57
+       C15.49,18.11 12.82,19.49 12.82,21.03
+       C12.81,23.06 15.10,23.17 15.68,20.87"/>`,
 
-  neptune: `<path d="M12 4 L12 20" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M6 10 C6 6 18 6 18 10" fill="none" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="7" y1="20" x2="17" y2="20" stroke="currentColor" stroke-width="1.5"/>
-            <line x1="7" y1="14" x2="17" y2="14" stroke="currentColor" stroke-width="1.5"/>`,
+  // 天王星 ♅
+  uranus: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M0.74,15.67 C2.70,14.32 4.05,11.70 4.05,8.69
+       C4.05,5.68 2.70,3.06 0.74,1.71
+       M15.12,1.71 C13.16,3.06 11.82,5.68 11.82,8.69
+       C11.82,11.70 13.16,14.32 15.12,15.67
+       M7.93,0.75 L7.93,16.10
+       M11.30,20.11 C11.30,21.97 9.79,23.25 7.93,23.25
+       C6.08,23.25 4.57,21.97 4.57,20.11
+       C4.57,18.26 6.08,16.98 7.93,16.98
+       C9.79,16.98 11.30,18.26 11.30,20.11 Z
+       M4.38,8.44 L11.48,8.44"/>`,
 
-  pluto: `<circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="12" y1="11.5" x2="12" y2="19" stroke="currentColor" stroke-width="1.5"/>
-          <line x1="8" y1="19" x2="16" y2="19" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M8 5 A4 4 0 0 1 16 5" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  // 海王星 ♆
+  neptune: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M13.08,0.75 C13.08,7.28 12.20,12.56 7.12,12.56
+       C2.03,12.56 1.15,7.28 1.15,0.75
+       M6.95,3.05 L6.95,23.25
+       M3.07,18.66 L11.44,18.66"/>`,
 
-  northNode: `<circle cx="8" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <circle cx="16" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 8 L12 5 L16 8" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  // 冥王星 ♇
+  pluto: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M15.10,3.84 C15.10,5.55 13.69,6.95 12.00,6.95
+       C10.30,6.95 8.90,5.55 8.90,3.84
+       C8.90,2.13 10.30,0.75 12.00,0.75
+       C13.69,0.75 15.10,2.13 15.10,3.84 Z
+       M20.87,3.83 C20.87,8.73 17.02,12.70 12.00,12.70
+       C7.10,12.70 3.13,8.73 3.13,3.83
+       M12.00,12.81 L12.00,23.24
+       M7.69,19.93 L16.19,19.93"/>`,
 
-  southNode: `<circle cx="8" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <circle cx="16" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 16 L12 19 L16 16" fill="none" stroke="currentColor" stroke-width="1.5"/>`,
+  // ドラゴンヘッド ☊
+  northNode: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M5.08,16.76 A3.06 3.06 0 0 0 0.75,16.76 A3.06 3.06 0 0 0 0.75,21.09 A3.06 3.06 0 0 0 5.08,21.09 A3.06 3.06 0 0 0 5.08,16.76 Z
+       M23.25,16.76 A3.06 3.06 0 0 0 19.93,16.76 A3.06 3.06 0 0 0 19.93,21.09 A3.06 3.06 0 0 0 23.25,21.09 A3.06 3.06 0 0 0 23.25,16.76 Z
+       M19.93,16.76 A9.80 9.80 0 0 0 19.93,2.92 A9.80 9.80 0 0 0 5.08,2.92 A9.80 9.80 0 0 0 5.08,16.76"/>`,
+
+  // ドラゴンテイル ☋ （ドラゴンヘッドの上下反転）
+  southNode: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M5.08,7.24 A3.06 3.06 0 0 1 0.75,7.24 A3.06 3.06 0 0 1 0.75,2.91 A3.06 3.06 0 0 1 5.08,2.91 A3.06 3.06 0 0 1 5.08,7.24 Z
+       M23.25,7.24 A3.06 3.06 0 0 1 19.93,7.24 A3.06 3.06 0 0 1 19.93,2.91 A3.06 3.06 0 0 1 23.25,2.91 A3.06 3.06 0 0 1 23.25,7.24 Z
+       M19.93,7.24 A9.80 9.80 0 0 1 19.93,21.08 A9.80 9.80 0 0 1 5.08,21.08 A9.80 9.80 0 0 1 5.08,7.24"/>`,
 }
