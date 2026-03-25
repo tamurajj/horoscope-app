@@ -3,7 +3,7 @@ import { searchCity } from '../lib/geocoding'
 import { HOUSE_SYSTEMS } from '../constants/astro'
 
 // ── 定数 ────────────────────────────────────────────────
-const ITEM_H = 44  // ドラムの1アイテムの高さ（Apple HIG推奨タップ領域と兼用）
+const ITEM_H = 36  // ドラムの1アイテムの高さ（44px→36pxに縮小）
 
 const HOUSE_SYSTEM_KEYS = Object.keys(HOUSE_SYSTEMS)
 
@@ -83,13 +83,14 @@ const drumStyles = {
     position: 'relative',
     height: ITEM_H * 3,
     overflow: 'hidden',
+    background: '#fff',  // ダークモード対策：ドラム背景を固定
   },
   scroll: {
     height: '100%',
     overflowY: 'scroll',
     scrollSnapType: 'y mandatory',
-    scrollbarWidth: 'none',      // Firefox
-    msOverflowStyle: 'none',     // IE
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none',
     WebkitOverflowScrolling: 'touch',
   },
   item: {
@@ -97,7 +98,7 @@ const drumStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1.1rem',
+    fontSize: '1rem',       // 1.1rem → 1rem に統一
     fontWeight: '300',
     letterSpacing: '0.05em',
     flexShrink: 0,
@@ -194,22 +195,22 @@ export default function InputForm({ onSubmit }) {
       <style>{`.drum-scroll::-webkit-scrollbar { display: none; }`}</style>
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <h1 style={styles.title}>ナタルチャート</h1>
+        <h1 style={styles.title}>ホロスコープ無料メーカー</h1>
 
         {/* 生年月日 */}
         <div style={styles.field}>
           <label style={styles.label}>生年月日</label>
           <div style={styles.drumRow}>
             <div style={styles.drumCol}>
-              <Drum items={YEARS}  value={year}  onChange={setYear}  width={80} />
+              <Drum items={YEARS}  value={year}  onChange={setYear}  width={72} />
               <span style={styles.drumUnit}>年</span>
             </div>
             <div style={styles.drumCol}>
-              <Drum items={MONTHS} value={month} onChange={setMonth} format={pad} width={52} />
+              <Drum items={MONTHS} value={month} onChange={setMonth} format={pad} width={48} />
               <span style={styles.drumUnit}>月</span>
             </div>
             <div style={styles.drumCol}>
-              <Drum items={days}   value={day}   onChange={setDay}   format={pad} width={52} />
+              <Drum items={days}   value={day}   onChange={setDay}   format={pad} width={48} />
               <span style={styles.drumUnit}>日</span>
             </div>
           </div>
@@ -220,27 +221,30 @@ export default function InputForm({ onSubmit }) {
           <label style={styles.label}>出生時刻</label>
           <div style={styles.drumRow}>
             <div style={styles.drumCol}>
-              <Drum items={HOURS}   value={hour}   onChange={setHour}   format={pad} width={52} />
+              <Drum items={HOURS}   value={hour}   onChange={setHour}   format={pad} width={48} />
               <span style={styles.drumUnit}>時</span>
             </div>
             <div style={styles.drumCol}>
-              <Drum items={MINUTES} value={minute} onChange={setMinute} format={pad} width={52} />
+              <Drum items={MINUTES} value={minute} onChange={setMinute} format={pad} width={48} />
               <span style={styles.drumUnit}>分</span>
             </div>
           </div>
         </div>
 
         {/* 出生地 */}
-        <div style={styles.field}>
+        <div style={{ ...styles.field, marginBottom: '0.75rem' }}>
           <label htmlFor="birth-city" style={styles.label}>出生地</label>
-          <input
-            id="birth-city"
-            type="text"
-            value={city}
-            onChange={e => setCity(e.target.value)}
-            placeholder="例：東京、大阪、New York"
-            style={styles.input}
-          />
+          {/* 生年月日ドラム行と幅を揃えるためにセンタリングラッパーを使用 */}
+          <div style={styles.drumRow}>
+            <input
+              id="birth-city"
+              type="text"
+              value={city}
+              onChange={e => setCity(e.target.value)}
+              placeholder="例：東京、大阪、New York"
+              style={styles.input}
+            />
+          </div>
         </div>
 
         {/* ハウスシステム */}
@@ -271,27 +275,28 @@ const styles = {
   form: {
     maxWidth: '400px',
     margin: '0 auto',
-    padding: '2rem 1.5rem',
+    padding: '1.25rem 1.5rem',  // 2rem → 1.25rem に縮小
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '0.875rem',             // 1.5rem → 0.875rem に縮小
     background: '#fff',
+    color: '#111',               // フォーム全体の文字色を固定
   },
   title: {
-    fontSize: '1.25rem',
+    fontSize: '1rem',            // 1.25rem → 1rem
     fontWeight: '300',
-    letterSpacing: '0.15em',
+    letterSpacing: '0.12em',
     textAlign: 'center',
-    marginBottom: '0.5rem',
+    marginBottom: '0.25rem',
     color: '#111',
   },
   field: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    gap: '0.375rem',             // 0.5rem → 0.375rem
   },
   label: {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',          // 0.75rem → 0.7rem
     letterSpacing: '0.08em',
     color: '#666',
   },
@@ -307,7 +312,7 @@ const styles = {
     gap: '2px',
   },
   drumUnit: {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',          // 0.75rem → 0.7rem
     color: '#999',
     fontWeight: '300',
     flexShrink: 0,
@@ -320,24 +325,31 @@ const styles = {
     borderRadius: 0,
     border: 'none',
     borderBottom: '1px solid #ccc',
-    padding: '0.5rem 0',
+    padding: '0.4rem 0',
     outline: 'none',
-    background: 'transparent',
-    width: '100%',
+    background: '#fff',          // ダークモード対策：背景色を固定
+    color: '#111',               // ダークモード対策：文字色を固定
+    // 生年月日ドラム行（72+14+4+48+12+4+48+12 ≈ 214px）に合わせた幅
+    width: '214px',
+    textAlign: 'center',
   },
   error: {
-    fontSize: '0.8rem',
+    fontSize: '0.75rem',
     color: '#c00',
+    textAlign: 'center',
+    margin: 0,
   },
   button: {
-    marginTop: '0.5rem',
+    marginTop: '0.25rem',
     minHeight: '44px',
-    padding: '0.75rem',
+    padding: '0.6rem',
     background: '#111',
     color: '#fff',
     border: 'none',
-    fontSize: '0.85rem',
+    fontSize: '0.8rem',
     letterSpacing: '0.1em',
     cursor: 'pointer',
+    width: '214px',
+    alignSelf: 'center',
   },
 }
