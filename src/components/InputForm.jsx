@@ -1,23 +1,169 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { searchCity } from '../lib/geocoding'
 import { HOUSE_SYSTEMS } from '../constants/astro'
 
+// ── 定数 ────────────────────────────────────────────────
+const ITEM_H = 44  // ドラムの1アイテムの高さ（Apple HIG推奨タップ領域と兼用）
+
+const HOUSE_SYSTEM_KEYS = Object.keys(HOUSE_SYSTEMS)
+
+const YEARS   = Array.from({ length: new Date().getFullYear() - 1919 }, (_, i) => 1920 + i)
+const MONTHS  = Array.from({ length: 12 }, (_, i) => i + 1)
+const HOURS   = Array.from({ length: 24 }, (_, i) => i)
+const MINUTES = Array.from({ length: 60 }, (_, i) => i)
+
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate()
+}
+
+function pad(n) {
+  return String(n).padStart(2, '0')
+}
+
+// ── Drum コンポーネント ─────────────────────────────────
+function Drum({ items, value, onChange, format, width }) {
+  const ref = useRef(null)
+  const scrollLock = useRef(false)
+
+  // value または items が変わったらスクロール位置を同期
+  useEffect(() => {
+    const idx = items.indexOf(value)
+    if (ref.current && idx >= 0) {
+      scrollLock.current = true
+      ref.current.scrollTop = idx * ITEM_H
+      setTimeout(() => { scrollLock.current = false }, 150)
+    }
+  }, [items, value])
+
+  const handleScroll = useCallback(() => {
+    if (scrollLock.current || !ref.current) return
+    const idx = Math.round(ref.current.scrollTop / ITEM_H)
+    const clamped = Math.max(0, Math.min(items.length - 1, idx))
+    if (items[clamped] !== value) {
+      onChange(items[clamped])
+    }
+  }, [items, value, onChange])
+
+  return (
+    <div style={{ ...drumStyles.outer, width }}>
+      {/* 上下フェード */}
+      <div style={drumStyles.fadeTop} />
+      <div style={drumStyles.fadeBottom} />
+      {/* 選択行のボーダー */}
+      <div style={drumStyles.highlight} />
+      {/* スクロールエリア */}
+      <div
+        ref={ref}
+        className="drum-scroll"
+        onScroll={handleScroll}
+        style={drumStyles.scroll}
+      >
+        {/* 上スペーサー（先頭アイテムをセンタリングするため） */}
+        <div style={{ height: ITEM_H, flexShrink: 0 }} />
+        {items.map(item => (
+          <div
+            key={item}
+            style={{
+              ...drumStyles.item,
+              color: item === value ? '#111' : '#ccc',
+            }}
+          >
+            {format ? format(item) : item}
+          </div>
+        ))}
+        {/* 下スペーサー（末尾アイテムをセンタリングするため） */}
+        <div style={{ height: ITEM_H, flexShrink: 0 }} />
+      </div>
+    </div>
+  )
+}
+
+const drumStyles = {
+  outer: {
+    position: 'relative',
+    height: ITEM_H * 3,
+    overflow: 'hidden',
+  },
+  scroll: {
+    height: '100%',
+    overflowY: 'scroll',
+    scrollSnapType: 'y mandatory',
+    scrollbarWidth: 'none',      // Firefox
+    msOverflowStyle: 'none',     // IE
+    WebkitOverflowScrolling: 'touch',
+  },
+  item: {
+    height: ITEM_H,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1.1rem',
+    fontWeight: '300',
+    letterSpacing: '0.05em',
+    flexShrink: 0,
+    scrollSnapAlign: 'center',
+    userSelect: 'none',
+    transition: 'color 0.1s',
+  },
+  highlight: {
+    position: 'absolute',
+    top: ITEM_H,
+    height: ITEM_H,
+    left: 0,
+    right: 0,
+    borderTop: '1px solid #e0e0e0',
+    borderBottom: '1px solid #e0e0e0',
+    pointerEvents: 'none',
+    zIndex: 2,
+  },
+  fadeTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: ITEM_H,
+    background: 'linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0))',
+    pointerEvents: 'none',
+    zIndex: 2,
+  },
+  fadeBottom: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: ITEM_H,
+    background: 'linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0))',
+    pointerEvents: 'none',
+    zIndex: 2,
+  },
+}
+
+// ── InputForm ────────────────────────────────────────────
 export default function InputForm({ onSubmit }) {
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
-  const [city, setCity] = useState('')
+  const [year,   setYear]   = useState(1990)
+  const [month,  setMonth]  = useState(1)
+  const [day,    setDay]    = useState(1)
+  const [hour,   setHour]   = useState(12)
+  const [minute, setMinute] = useState(0)
+  const [city,   setCity]   = useState('')
   const [houseSystem, setHouseSystem] = useState('equal')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error,   setError]   = useState('')
+
+  // 年・月が変わったら日数オーバーをチェック
+  const maxDay = daysInMonth(year, month)
+  const days   = Array.from({ length: maxDay }, (_, i) => i + 1)
+  useEffect(() => {
+    if (day > maxDay) setDay(maxDay)
+  }, [year, month, maxDay])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
-    // 修正 #6: 入力値のtrim + バリデーション
     const trimmedCity = city.trim()
-    if (!date || !time || !trimmedCity) {
-      setError('すべての項目を入力してください')
+    if (!trimmedCity) {
+      setError('出生地を入力してください')
       return
     }
 
@@ -25,22 +171,13 @@ export default function InputForm({ onSubmit }) {
     try {
       const { lat, lng, timezone, displayName } = await searchCity(trimmedCity)
 
-      // 修正 #1: UTC変換ロジックを修正
-      // localStr はブラウザのTZに依存せず「壁時計の文字列」として扱う
-      const localStr = `${date}T${time}:00`
-
-      // new Date(localStr) → ブラウザのローカルTZとして解釈されたDate
-      const localDate = new Date(localStr)
-
-      // 同じ壁時計文字列を出生地TZで解釈した場合のUTCミリ秒を取得
-      const tzDate = new Date(
+      // 壁時計の文字列を組み立て → UTC変換
+      const localStr   = `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00`
+      const localDate  = new Date(localStr)
+      const tzDate     = new Date(
         new Date(localStr).toLocaleString('en-US', { timeZone: timezone })
       )
-
-      // 差分 = 出生地TZオフセット（ブラウザTZとの差を含む）
-      const offsetMs = localDate - tzDate
-
-      // 補正してUTC基準のDateを生成
+      const offsetMs    = localDate - tzDate
       const utcDatetime = new Date(localDate.getTime() + offsetMs)
 
       onSubmit({ datetime: utcDatetime, lat, lng, houseSystem, displayName })
@@ -52,64 +189,81 @@ export default function InputForm({ onSubmit }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <h1 style={styles.title}>ナタルチャート</h1>
+    <>
+      {/* WebKit環境のスクロールバーを非表示 */}
+      <style>{`.drum-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-      {/* 修正 #5: htmlFor / id で label と input を紐付け */}
-      <div style={styles.field}>
-        <label htmlFor="birth-date" style={styles.label}>生年月日</label>
-        <input
-          id="birth-date"
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          style={styles.input}
-        />
-      </div>
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <h1 style={styles.title}>ナタルチャート</h1>
 
-      <div style={styles.field}>
-        <label htmlFor="birth-time" style={styles.label}>出生時刻</label>
-        <input
-          id="birth-time"
-          type="time"
-          value={time}
-          onChange={e => setTime(e.target.value)}
-          style={styles.input}
-        />
-      </div>
+        {/* 生年月日 */}
+        <div style={styles.field}>
+          <label style={styles.label}>生年月日</label>
+          <div style={styles.drumRow}>
+            <div style={styles.drumCol}>
+              <Drum items={YEARS}  value={year}  onChange={setYear}  width={80} />
+              <span style={styles.drumUnit}>年</span>
+            </div>
+            <div style={styles.drumCol}>
+              <Drum items={MONTHS} value={month} onChange={setMonth} format={pad} width={52} />
+              <span style={styles.drumUnit}>月</span>
+            </div>
+            <div style={styles.drumCol}>
+              <Drum items={days}   value={day}   onChange={setDay}   format={pad} width={52} />
+              <span style={styles.drumUnit}>日</span>
+            </div>
+          </div>
+        </div>
 
-      <div style={styles.field}>
-        <label htmlFor="birth-city" style={styles.label}>出生地</label>
-        <input
-          id="birth-city"
-          type="text"
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          placeholder="例：東京、大阪、New York"
-          style={styles.input}
-        />
-      </div>
+        {/* 出生時刻 */}
+        <div style={styles.field}>
+          <label style={styles.label}>出生時刻</label>
+          <div style={styles.drumRow}>
+            <div style={styles.drumCol}>
+              <Drum items={HOURS}   value={hour}   onChange={setHour}   format={pad} width={52} />
+              <span style={styles.drumUnit}>時</span>
+            </div>
+            <div style={styles.drumCol}>
+              <Drum items={MINUTES} value={minute} onChange={setMinute} format={pad} width={52} />
+              <span style={styles.drumUnit}>分</span>
+            </div>
+          </div>
+        </div>
 
-      <div style={styles.field}>
-        <label htmlFor="house-system" style={styles.label}>ハウスシステム</label>
-        <select
-          id="house-system"
-          value={houseSystem}
-          onChange={e => setHouseSystem(e.target.value)}
-          style={styles.input}
-        >
-          {Object.entries(HOUSE_SYSTEMS).map(([key, label]) => (
-            <option key={key} value={key}>{label}</option>
-          ))}
-        </select>
-      </div>
+        {/* 出生地 */}
+        <div style={styles.field}>
+          <label htmlFor="birth-city" style={styles.label}>出生地</label>
+          <input
+            id="birth-city"
+            type="text"
+            value={city}
+            onChange={e => setCity(e.target.value)}
+            placeholder="例：東京、大阪、New York"
+            style={styles.input}
+          />
+        </div>
 
-      {error && <p style={styles.error}>{error}</p>}
+        {/* ハウスシステム */}
+        <div style={styles.field}>
+          <label style={styles.label}>ハウスシステム</label>
+          <div style={styles.drumRow}>
+            <Drum
+              items={HOUSE_SYSTEM_KEYS}
+              value={houseSystem}
+              onChange={setHouseSystem}
+              format={key => HOUSE_SYSTEMS[key]}
+              width={200}
+            />
+          </div>
+        </div>
 
-      <button type="submit" disabled={loading} style={styles.button}>
-        {loading ? '計算中...' : 'チャートを作成'}
-      </button>
-    </form>
+        {error && <p style={styles.error}>{error}</p>}
+
+        <button type="submit" disabled={loading} style={styles.button}>
+          {loading ? '計算中...' : 'チャートを作成'}
+        </button>
+      </form>
+    </>
   )
 }
 
@@ -120,7 +274,8 @@ const styles = {
     padding: '2rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1.5rem',
+    background: '#fff',
   },
   title: {
     fontSize: '1.25rem',
@@ -128,22 +283,38 @@ const styles = {
     letterSpacing: '0.15em',
     textAlign: 'center',
     marginBottom: '0.5rem',
+    color: '#111',
   },
   field: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.375rem',
+    gap: '0.5rem',
   },
   label: {
     fontSize: '0.75rem',
     letterSpacing: '0.08em',
     color: '#666',
   },
+  drumRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '4px',
+  },
+  drumCol: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '2px',
+  },
+  drumUnit: {
+    fontSize: '0.75rem',
+    color: '#999',
+    fontWeight: '300',
+    flexShrink: 0,
+  },
   input: {
-    // 修正 #2: iOS自動ズーム防止のため16px固定
     fontSize: '16px',
     fontWeight: '300',
-    // 修正 #4: iOSネイティブスタイルを無効化してカスタムスタイルを適用
     WebkitAppearance: 'none',
     appearance: 'none',
     borderRadius: 0,
@@ -160,7 +331,6 @@ const styles = {
   },
   button: {
     marginTop: '0.5rem',
-    // 修正 #3: タップ領域をApple HIG推奨の44px以上に
     minHeight: '44px',
     padding: '0.75rem',
     background: '#111',
