@@ -3,7 +3,7 @@ import { searchCity } from '../lib/geocoding'
 import { HOUSE_SYSTEMS } from '../constants/astro'
 
 // ── 定数 ────────────────────────────────────────────────
-const ITEM_H = 36  // ドラムの1アイテムの高さ（44px→36pxに縮小）
+const ITEM_H = 36
 
 const HOUSE_SYSTEM_KEYS = Object.keys(HOUSE_SYSTEMS)
 
@@ -25,7 +25,6 @@ function Drum({ items, value, onChange, format, width }) {
   const ref = useRef(null)
   const scrollLock = useRef(false)
 
-  // value または items が変わったらスクロール位置を同期
   useEffect(() => {
     const idx = items.indexOf(value)
     if (ref.current && idx >= 0) {
@@ -46,19 +45,15 @@ function Drum({ items, value, onChange, format, width }) {
 
   return (
     <div style={{ ...drumStyles.outer, width }}>
-      {/* 上下フェード */}
       <div style={drumStyles.fadeTop} />
       <div style={drumStyles.fadeBottom} />
-      {/* 選択行のボーダー */}
       <div style={drumStyles.highlight} />
-      {/* スクロールエリア */}
       <div
         ref={ref}
         className="drum-scroll"
         onScroll={handleScroll}
         style={drumStyles.scroll}
       >
-        {/* 上スペーサー（先頭アイテムをセンタリングするため） */}
         <div style={{ height: ITEM_H, flexShrink: 0 }} />
         {items.map(item => (
           <div
@@ -71,7 +66,6 @@ function Drum({ items, value, onChange, format, width }) {
             {format ? format(item) : item}
           </div>
         ))}
-        {/* 下スペーサー（末尾アイテムをセンタリングするため） */}
         <div style={{ height: ITEM_H, flexShrink: 0 }} />
       </div>
     </div>
@@ -83,7 +77,7 @@ const drumStyles = {
     position: 'relative',
     height: ITEM_H * 3,
     overflow: 'hidden',
-    background: '#fff',  // ダークモード対策：ドラム背景を固定
+    background: '#fff',
   },
   scroll: {
     height: '100%',
@@ -98,7 +92,7 @@ const drumStyles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '1rem',       // 1.1rem → 1rem に統一
+    fontSize: '1rem',
     fontWeight: '300',
     letterSpacing: '0.05em',
     flexShrink: 0,
@@ -151,7 +145,6 @@ export default function InputForm({ onSubmit }) {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
 
-  // 年・月が変わったら日数オーバーをチェック
   const maxDay = daysInMonth(year, month)
   const days   = Array.from({ length: maxDay }, (_, i) => i + 1)
   useEffect(() => {
@@ -172,7 +165,6 @@ export default function InputForm({ onSubmit }) {
     try {
       const { lat, lng, timezone, displayName } = await searchCity(trimmedCity)
 
-      // 壁時計の文字列を組み立て → UTC変換
       const localStr   = `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00`
       const localDate  = new Date(localStr)
       const tzDate     = new Date(
@@ -191,11 +183,9 @@ export default function InputForm({ onSubmit }) {
 
   return (
     <>
-      {/* WebKit環境のスクロールバーを非表示 */}
       <style>{`.drum-scroll::-webkit-scrollbar { display: none; }`}</style>
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <h1 style={styles.title}>ホロスコープ無料メーカー</h1>
 
         {/* 生年月日 */}
         <div style={styles.field}>
@@ -234,7 +224,6 @@ export default function InputForm({ onSubmit }) {
         {/* 出生地 */}
         <div style={{ ...styles.field, marginBottom: '0.75rem' }}>
           <label htmlFor="birth-city" style={styles.label}>出生地</label>
-          {/* 生年月日ドラム行と幅を揃えるためにセンタリングラッパーを使用 */}
           <div style={styles.drumRow}>
             <input
               id="birth-city"
@@ -275,28 +264,20 @@ const styles = {
   form: {
     maxWidth: '400px',
     margin: '0 auto',
-    padding: '1.25rem 1.5rem',  // 2rem → 1.25rem に縮小
+    padding: '1.25rem 1.5rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.875rem',             // 1.5rem → 0.875rem に縮小
+    gap: '0.875rem',
     background: '#fff',
-    color: '#111',               // フォーム全体の文字色を固定
-  },
-  title: {
-    fontSize: '1rem',            // 1.25rem → 1rem
-    fontWeight: '300',
-    letterSpacing: '0.12em',
-    textAlign: 'center',
-    marginBottom: '0.25rem',
     color: '#111',
   },
   field: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.375rem',             // 0.5rem → 0.375rem
+    gap: '0.375rem',
   },
   label: {
-    fontSize: '0.7rem',          // 0.75rem → 0.7rem
+    fontSize: '0.7rem',
     letterSpacing: '0.08em',
     color: '#666',
   },
@@ -312,7 +293,7 @@ const styles = {
     gap: '2px',
   },
   drumUnit: {
-    fontSize: '0.7rem',          // 0.75rem → 0.7rem
+    fontSize: '0.7rem',
     color: '#999',
     fontWeight: '300',
     flexShrink: 0,
@@ -327,9 +308,8 @@ const styles = {
     borderBottom: '1px solid #ccc',
     padding: '0.4rem 0',
     outline: 'none',
-    background: '#fff',          // ダークモード対策：背景色を固定
-    color: '#111',               // ダークモード対策：文字色を固定
-    // 生年月日ドラム行（72+14+4+48+12+4+48+12 ≈ 214px）に合わせた幅
+    background: '#fff',
+    color: '#111',
     width: '214px',
     textAlign: 'center',
   },

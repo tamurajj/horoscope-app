@@ -4,13 +4,13 @@ import { SYMBOLS } from './symbols'
 
 const CX = 200
 const CY = 200
-const R_OUTER = 180
-const R_SIGN   = 155
-const R_INNER  = 130
-const R_PLANET = 142  // R_SIGN(155) と R_INNER(130) の中間
-const R_HOUSE_NUM = R_INNER - 20  // = 110（R_INNER の内側）
+const R_OUTER     = 180
+const R_SIGN      = 152
+const R_INNER     = 120
+const R_PLANET    = 136
+const R_HOUSE_NUM = 100
 
-const MIN_DIST = 20   // アイコン中心間の最小距離(px)
+const MIN_DIST = 24  // 20pxアイコン + 余白
 
 function toRad(deg) { return (deg * Math.PI) / 180 }
 
@@ -23,11 +23,11 @@ function lonToXY(lon, r, rotation = 0) {
 }
 
 const ASPECT_COLORS = {
-  conjunction: '#ccc',
-  opposition:  '#ccc',
-  trine:       '#d5d5d5',
-  square:      '#e0e0e0',
-  sextile:     '#e8e8e8',
+  conjunction: '#bbb',
+  opposition:  '#bbb',
+  trine:       '#ccc',
+  square:      '#d5d5d5',
+  sextile:     '#ddd',
 }
 
 function lonToSignLabel(lon) {
@@ -39,11 +39,6 @@ function lonToSignLabel(lon) {
   return `${signs[signIndex]} ${degree}°${String(minute).padStart(2, '0')}'`
 }
 
-/**
- * 天体の表示用黄経を計算する（衝突回避）
- * アイコン同士が重なる場合、黄経を微調整して間隔を確保する。
- * 実際の黄経（天文計算値）は変更しない。
- */
 function computeDisplayLons(planets) {
   const entries = PLANETS
     .filter(p => planets[p])
@@ -52,15 +47,12 @@ function computeDisplayLons(planets) {
 
   if (entries.length === 0) return {}
 
-  // R_PLANET の円周上でアイコンが重ならない最小角度間隔（度）
   const minSepDeg = (MIN_DIST / R_PLANET) * (180 / Math.PI)
   const n = entries.length
   const lons = entries.map(e => e.lon)
 
   for (let iter = 0; iter < 200; iter++) {
     let moved = false
-
-    // 隣接ペアを順方向にチェック
     for (let i = 0; i < n - 1; i++) {
       const diff = lons[i + 1] - lons[i]
       if (diff < minSepDeg) {
@@ -70,8 +62,6 @@ function computeDisplayLons(planets) {
         moved = true
       }
     }
-
-    // 末尾→先頭の折り返しペアをチェック（例: 358° と 2°）
     const wrapDiff = (lons[0] + 360) - lons[n - 1]
     if (wrapDiff < minSepDeg) {
       const push = (minSepDeg - wrapDiff) / 2
@@ -79,7 +69,6 @@ function computeDisplayLons(planets) {
       lons[0]     += push
       moved = true
     }
-
     if (!moved) break
   }
 
@@ -94,10 +83,7 @@ export default function Chart({ planets, houses, aspects }) {
   const { cusps, asc } = houses
   const [activeTooltip, setActiveTooltip] = useState(null)
 
-  // ASCが常に左水平（9時方向）になるよう全体を回転
   const xy = (lon, r) => lonToXY(lon, r, asc)
-
-  // 表示用黄経（衝突回避済み）をメモ化
   const displayLons = useMemo(() => computeDisplayLons(planets), [planets])
 
   const handlePlanetClick = (planet) => {
@@ -110,9 +96,12 @@ export default function Chart({ planets, houses, aspects }) {
       xmlns="http://www.w3.org/2000/svg"
       style={{ width: '100%', maxWidth: '480px', display: 'block', margin: '0 auto' }}
     >
-      {/* 外周リング */}
-      <circle cx={CX} cy={CY} r={R_OUTER} fill="none" stroke="#999" strokeWidth="0.5"/>
-      <circle cx={CX} cy={CY} r={R_SIGN}  fill="none" stroke="#999" strokeWidth="0.5"/>
+      {/* 背景 */}
+      <rect width="400" height="400" fill="#ffffff"/>
+
+      {/* リング */}
+      <circle cx={CX} cy={CY} r={R_OUTER} fill="none" stroke="#999" strokeWidth="0.75"/>
+      <circle cx={CX} cy={CY} r={R_SIGN}  fill="none" stroke="#999" strokeWidth="0.75"/>
       <circle cx={CX} cy={CY} r={R_INNER} fill="none" stroke="#bbb" strokeWidth="0.5"/>
 
       {/* 12サイン区切り線・ラベル */}
@@ -123,11 +112,11 @@ export default function Chart({ planets, houses, aspects }) {
         const mid = xy(lon + 15, (R_SIGN + R_OUTER) / 2)
         return (
           <g key={sign}>
-            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#999" strokeWidth="0.5"/>
+            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#ccc" strokeWidth="0.5"/>
             <text
               x={mid.x} y={mid.y}
               textAnchor="middle" dominantBaseline="middle"
-              fontSize="7" fill="#555" fontWeight="300"
+              fontSize="12" fill="#999" fontWeight="300"
             >
               {sign.slice(0, 2)}
             </text>
@@ -144,13 +133,13 @@ export default function Chart({ planets, houses, aspects }) {
           <line
             key={i}
             x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-            stroke={isAngle ? '#333' : '#bbb'}
+            stroke={isAngle ? '#555' : '#ddd'}
             strokeWidth={isAngle ? '1' : '0.5'}
           />
         )
       })}
 
-      {/* ハウス番号（天体より外側、内周リングとの間に配置） */}
+      {/* ハウス番号 */}
       {cusps.map((lon, i) => {
         const next = cusps[(i + 1) % 12]
         const mid = next >= lon
@@ -162,14 +151,14 @@ export default function Chart({ planets, houses, aspects }) {
             key={i}
             x={x} y={y}
             textAnchor="middle" dominantBaseline="middle"
-            fontSize="8" fill="#aaa" fontWeight="300"
+            fontSize="12" fill="#bbb" fontWeight="300"
           >
             {i + 1}
           </text>
         )
       })}
 
-      {/* アスペクト線（表示位置ベース） */}
+      {/* アスペクト線 */}
       {aspects.map(({ planet1, planet2, type }, i) => {
         const lon1 = displayLons[planet1] ?? planets[planet1]?.longitude
         const lon2 = displayLons[planet2] ?? planets[planet2]?.longitude
@@ -182,12 +171,11 @@ export default function Chart({ planets, houses, aspects }) {
             x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
             stroke={ASPECT_COLORS[type]}
             strokeWidth="0.5"
-            opacity="1"
           />
         )
       })}
 
-      {/* 天体シンボル（衝突回避済みの表示用黄経を使用） */}
+      {/* 天体シンボル */}
       {PLANETS.map(planet => {
         if (!planets[planet]) return null
         const dispLon = displayLons[planet] ?? planets[planet].longitude
@@ -196,27 +184,28 @@ export default function Chart({ planets, houses, aspects }) {
         return (
           <g
             key={planet}
-            transform={`translate(${x - 8}, ${y - 8})`}
+            transform={`translate(${x - 10}, ${y - 10})`}
             onClick={() => handlePlanetClick(planet)}
             style={{ cursor: 'pointer' }}
           >
-            <rect x="-4" y="-4" width="24" height="24" fill="transparent"/>
+            {/* タップ領域 36×36 */}
+            <rect x="-8" y="-8" width="36" height="36" fill="transparent"/>
             <svg
-              width="16" height="16"
+              width="20" height="20"
               viewBox="0 0 24 24"
               dangerouslySetInnerHTML={{ __html: SYMBOLS[planet] }}
-              style={{ color: isActive ? '#555' : '#111', overflow: 'visible' }}
+              style={{ color: isActive ? '#888' : '#222', overflow: 'visible' }}
             />
           </g>
         )
       })}
 
-      {/* ツールチップ（実際の黄経を表示） */}
+      {/* ツールチップ */}
       {activeTooltip && planets[activeTooltip] && (() => {
         const actualLon = planets[activeTooltip].longitude
         const dispLon = displayLons[activeTooltip] ?? actualLon
         const { x, y } = xy(dispLon, R_PLANET)
-        const TW = 80, TH = 32, PAD = 6
+        const TW = 84, TH = 32, PAD = 6
         const tx = Math.min(Math.max(x - TW / 2, 4), 400 - TW - 4)
         const ty = y < CY ? y + 14 : y - TH - 14
         return (
@@ -224,26 +213,15 @@ export default function Chart({ planets, houses, aspects }) {
             <rect
               x={tx} y={ty} width={TW} height={TH}
               rx="3" ry="3"
-              fill="white" stroke="#ccc" strokeWidth="0.5"
+              fill="#fff" stroke="#ddd" strokeWidth="0.5"
             />
-            <text x={tx + PAD} y={ty + 11} fontSize="8" fill="#333" fontWeight="400">
+            <text x={tx + PAD} y={ty + 11} fontSize="8" fill="#999" fontWeight="400">
               {PLANET_LABELS[activeTooltip]}
             </text>
-            <text x={tx + PAD} y={ty + 23} fontSize="9" fill="#111" fontWeight="300">
+            <text x={tx + PAD} y={ty + 23} fontSize="9" fill="#222" fontWeight="300">
               {lonToSignLabel(actualLon)}
             </text>
           </g>
-        )
-      })()}
-
-      {/* ASCラベル */}
-      {(() => {
-        const p = xy(asc, R_OUTER + 12)
-        return (
-          <text x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
-            fontSize="7" fill="#333" fontWeight="400" letterSpacing="0.05em">
-            ASC
-          </text>
         )
       })()}
     </svg>
