@@ -205,7 +205,18 @@ export default function Chart({ planets, houses, aspects }) {
         const actualLon = planets[activeTooltip].longitude
         const dispLon = displayLons[activeTooltip] ?? actualLon
         const { x, y } = xy(dispLon, R_PLANET)
-        const TW = 84, TH = 32, PAD = 6
+
+        // ハウス判定（選択中のハウスシステムの cusps を使用）
+        const houseIndex = cusps.reduce((found, cusp, i) => {
+          const next = cusps[(i + 1) % 12]
+          const inHouse = next > cusp
+            ? actualLon >= cusp && actualLon < next
+            : actualLon >= cusp || actualLon < next  // 360°をまたぐケース
+          return inHouse ? i : found
+        }, 0)
+        const houseLabel = `${houseIndex + 1} ハウス`
+
+        const TW = 90, TH = 56, PAD = 8
         const tx = Math.min(Math.max(x - TW / 2, 4), 400 - TW - 4)
         const ty = y < CY ? y + 14 : y - TH - 14
         return (
@@ -215,11 +226,14 @@ export default function Chart({ planets, houses, aspects }) {
               rx="3" ry="3"
               fill="#fff" stroke="#ddd" strokeWidth="0.5"
             />
-            <text x={tx + PAD} y={ty + 11} fontSize="8" fill="#999" fontWeight="400">
+            <text x={tx + PAD} y={ty + 16} fontSize="12" fill="#333" fontWeight="300">
               {PLANET_LABELS[activeTooltip]}
             </text>
-            <text x={tx + PAD} y={ty + 23} fontSize="9" fill="#222" fontWeight="300">
+            <text x={tx + PAD} y={ty + 32} fontSize="12" fill="#333" fontWeight="300">
               {lonToSignLabel(actualLon)}
+            </text>
+            <text x={tx + PAD} y={ty + 48} fontSize="12" fill="#333" fontWeight="300">
+              {houseLabel}
             </text>
           </g>
         )
