@@ -131,7 +131,7 @@ const styles = {
   chartWrapper: {
     maxWidth: '480px',
     margin: '0 auto',
-    padding: '0 1rem',
+    padding: '1.5rem 1rem 1rem',  // ← 上の余白を増やす（0 → 1.5rem）
   },
   meta: {
     fontSize: '0.72rem',
