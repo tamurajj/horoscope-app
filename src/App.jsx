@@ -31,6 +31,7 @@ export default function App() {
       const aspects = calcAspects(planets)
       setChartData({ planets, houses, aspects, displayName, datetime })
       setPhase('chart')
+      window.scrollTo(0, 0)  // ← 追加
     } catch (err) {
       setError(err.message)
     }
