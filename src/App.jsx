@@ -110,7 +110,7 @@ const styles = {
     left: 0,
     right: 0,
     height: `${HEADER_H}px`,
-    paddingTop: 'env(safe-area-inset-top)',  // ← 追加
+    //paddingTop: 'env(safe-area-inset-top)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -125,7 +125,7 @@ const styles = {
     fontWeight: '300',
   },
   body: {
-    paddingTop: `calc(${HEADER_H}px + env(safe-area-inset-top) + 16px)`,  // ← 修正
+    paddingTop: `${HEADER_H + 80}px`,  // 80px に増やす
     paddingBottom: '5rem',
   },
   chartWrapper: {
